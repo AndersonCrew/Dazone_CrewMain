@@ -1,0 +1,197 @@
+package com.crewcloud.crewmain.activity;
+
+import android.os.AsyncTask;
+import android.os.Build;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import com.crewcloud.crewmain.R;
+import com.crewcloud.crewmain.CrewCloudApplication;
+import com.crewcloud.crewmain.datamodel.BelongDepartmentDTO;
+import com.crewcloud.crewmain.datamodel.UserDetailDto;
+import com.crewcloud.crewmain.util.PreferenceUtilities;
+import com.crewcloud.crewmain.util.Util;
+import com.crewcloud.crewmain.util.WebClient;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
+
+import java.util.ArrayList;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import de.hdodenhof.circleimageview.CircleImageView;
+
+/**
+ * Created by Dazone on 6/22/2017.
+ */
+
+public class MyProfileActivity extends BaseActivity {
+    @BindView(R.id.activity_new_profile_iv_avatar)
+    CircleImageView ivAvatar;
+
+    @BindView(R.id.activity_new_profile_tv_name)
+    TextView tvName;
+    @BindView(R.id.activity_new_profile_tv_phone_com)
+    TextView tvCompanyPhone;
+    @BindView(R.id.activity_new_profile_date_of_emloyment_value)
+    TextView tvEntranceDate;
+    @BindView(R.id.activity_new_profile_date_of_birth_value)
+    TextView tvBirthday;
+    @BindView(R.id.activity_new_profile_tv_depart_position)
+    TextView tvDepartPositionName;
+
+    @BindView(R.id.activity_new_profile_tv_company_name)
+    TextView tvCompanyName;
+
+    @BindView(R.id.activity_new_profile_tv_company_id)
+    TextView tvCompanyId;
+
+    @BindView(R.id.activity_new_profile_tv_persion_id)
+    TextView tvPersionId;
+
+    @BindView(R.id.activity_new_profile_tv_email)
+    TextView tvEmail;
+
+    @BindView(R.id.activity_new_profile_tv_pass)
+    TextView tvPass;
+
+    @BindView(R.id.activity_new_profile_tv_phone)
+    TextView tvPhone;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.my_profile_activity);
+
+        rlDateJoin = (RelativeLayout) findViewById(R.id.rlDateJoin);
+        rlBirthday = (RelativeLayout) findViewById(R.id.rlBirthday);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.myColor_PrimaryDark));
+        }
+        ButterKnife.bind(this);
+        new WebClientAsync_checkVersion().execute();
+    }
+
+    private class WebClientAsync_checkVersion extends AsyncTask<Void, Void, Void> {
+        UserDetailDto userDto;
+        @Override
+        protected Void doInBackground(Void... params) {
+            WebClient.getUser(CrewCloudApplication.getInstance().getPreferenceUtilities().getDomain(), new WebClient.OnWebClientListener() {
+                @Override
+                public void onSuccess(JsonNode jsonNode) {
+                    try {
+                        if (jsonNode.get("success").asInt() == 0) {
+
+                        } else {
+                            String dataJson = jsonNode.get("data").toString();
+                            Gson gson = new Gson();
+                             userDto = gson.fromJson(dataJson, UserDetailDto.class);
+
+
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+
+                    }
+
+                }
+
+                @Override
+                public void onFailure() {
+
+                }
+            });
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            fillData(userDto);
+        }
+    }
+
+
+    private void fillData(UserDetailDto userDetailDto) {
+        PreferenceUtilities preferenceUtilities = CrewCloudApplication.getInstance().getPreferenceUtilities();
+        String companyName = preferenceUtilities.getCurrentCompanyName();
+        String avatar = preferenceUtilities.getAvatar();
+        tvName.setText(userDetailDto.getName());
+        tvEmail.setText(userDetailDto.getMailAddress());
+        tvPass.setText(userDetailDto.getPassword() + "pass");
+        tvCompanyName.setText(companyName);
+        tvCompanyId.setText(preferenceUtilities.getCurrentCompanyDomain());
+        tvPersionId.setText(preferenceUtilities.getUserId());
+        tvPhone.setText(userDetailDto.getCellPhone());
+        tvCompanyPhone.setText(userDetailDto.getCompanyPhone());
+
+        String strPositionName = "";
+        String belongToDepartment = "";
+        ArrayList<BelongDepartmentDTO> listBelong = userDetailDto.getBelongs();
+
+        for (BelongDepartmentDTO belongDepartmentDTOs : listBelong) {
+            belongToDepartment += listBelong.indexOf(belongDepartmentDTOs) == listBelong.size() - 1 ?
+                    belongDepartmentDTOs.getDepartName() + " / " + belongDepartmentDTOs.getPositionName() + " / " + belongDepartmentDTOs.getDutyName() :
+                    belongDepartmentDTOs.getDepartName() + " / " + belongDepartmentDTOs.getPositionName() + " / " + belongDepartmentDTOs.getDutyName() + "<br>";
+            if (belongDepartmentDTOs.isDefault()) {
+                strPositionName = belongDepartmentDTOs.getDepartName() + " / " + belongDepartmentDTOs.getPositionName() + " / " + belongDepartmentDTOs.getDutyName();
+            }
+        }
+        tvDepartPositionName.setText(strPositionName);
+        if (!TextUtils.isEmpty(avatar)) {
+            Picasso.with(this).load(CrewCloudApplication.getInstance().getPreferenceUtilities().getCurrentServiceDomain() + avatar)
+                    .placeholder(R.mipmap.avatar_default).into(ivAvatar);
+        }
+
+        String birthDay = Util.displayTimeWithoutOffset(userDetailDto.getBirthDate());
+        int yearBirthDay = Integer.parseInt(Util.formatYear(userDetailDto.getBirthDate()));
+
+        String joinDate = Util.displayTimeWithoutOffset(userDetailDto.getEntranceDate());
+        int yearDateJoin = Integer.parseInt(Util.formatYear(userDetailDto.getEntranceDate()));
+
+        if(yearBirthDay <= 1900) {
+            rlBirthday.setVisibility(View.GONE);
+        } else {
+            rlBirthday.setVisibility(View.VISIBLE);
+            tvBirthday.setText(birthDay);
+        }
+
+        if(yearDateJoin <= 1900) {
+            rlDateJoin.setVisibility(View.GONE);
+        } else {
+            rlDateJoin.setVisibility(View.VISIBLE);
+            tvEntranceDate.setText(joinDate);
+        }
+
+
+    }
+
+    private RelativeLayout rlDateJoin, rlBirthday;
+
+    @Override
+
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @OnClick(R.id.btn_back)
+    public void onClickBack() {
+        finish();
+    }
+
+    @OnClick(R.id.change_pass)
+    public void changePass() {
+        BaseActivity.Instance.callActivity(ChangePasswordActivity.class);
+    }
+
+}
+
+

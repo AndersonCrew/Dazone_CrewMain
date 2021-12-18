@@ -1,0 +1,72 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion "26.0.1"
+
+    defaultConfig {
+        applicationId "com.crewcloud.crewmain"
+        minSdkVersion 16
+        targetSdkVersion 26
+        versionCode 7
+        versionName "1.6.4"
+        multiDexEnabled true
+
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+
+
+    signingConfigs {
+        one {
+            storeFile file("DazoneKeyStore.jks")
+            storePassword 'tranquoctrung'
+            keyAlias 'dazone'
+            keyPassword 'tranquoctrung'
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.one
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField "boolean", "ENABLE_DEBUG", "false"
+        }
+        debug {
+            debuggable true
+            signingConfig signingConfigs.one
+            buildConfigField "boolean", "ENABLE_DEBUG", "true"
+        }
+
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:multidex:1.0.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:25.3.1'
+    implementation 'com.android.support:design:25.3.1'
+    implementation 'org.apmem.tools:layouts:1.10@aar'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.6.3'
+    implementation 'com.google.code.gson:gson:2.7'
+    implementation 'com.mcxiaoke.volley:library:1.0.19'
+    implementation 'de.hdodenhof:circleimageview:2.1.0'
+    implementation 'com.squareup.picasso:picasso:2.4.0'
+    implementation 'org.greenrobot:eventbus:3.0.0'
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'io.reactivex:rxjava:1.1.6'
+    implementation "me.leolin:ShortcutBadger:1.1.18@aar"
+    implementation 'com.jakewharton:butterknife:7.0.1'
+    implementation 'com.google.android.gms:play-services:10.0.0'
+
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+}
