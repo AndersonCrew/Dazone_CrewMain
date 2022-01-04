@@ -86,7 +86,7 @@ public class BoditechCoffeeActivity extends BaseActivity {
             mWebView.loadUrl(url);
         } else if(projectCode.equals(Constants.PROJECT_CODE_HANMARU)){
             String postData = "userid=" + Base64.encodeToString(userId.getBytes(), Base64.DEFAULT) + "&password=" + password + "&lang=ko&url=/Custom/UI/MainMobile";
-            String url = "https://hanmaru1.ehansco.co.kr/Login?" + postData;
+            String url = "https://hanmaru.ehansco.co.kr/Login?" + postData;
 
             mWebView.loadUrl(url);
         }
